@@ -1,14 +1,14 @@
 """
-🧪 Script de Testing para API de Microbioma
-==========================================
+🧪 Testing Script for Microbiome API
+=====================================
 
-Este script prueba todos los endpoints de la API y verifica que funcionen correctamente.
+This script tests all API endpoints and verifies they work correctly.
 
-Uso:
+Usage:
     python test_api.py
 
-Autor: Proyecto Microorganismos
-Fecha: 2025
+Author: Microorganisms Project
+Date: 2025
 """
 
 import requests
@@ -20,7 +20,7 @@ import sys
 
 class MicrobiomeAPITester:
     """
-    Clase para testear la API de microbioma.
+    Class for testing the microbiome API.
     """
     
     def __init__(self, base_url="http://localhost:5000"):
@@ -30,7 +30,7 @@ class MicrobiomeAPITester:
         
     def log_test(self, test_name: str, success: bool, message: str = "", data: dict = None):
         """
-        Registrar resultado de un test.
+        Log test result.
         """
         result = {
             'test': test_name,
@@ -42,19 +42,19 @@ class MicrobiomeAPITester:
         
         self.test_results.append(result)
         
-        # Mostrar resultado inmediatamente
+        # Show result immediately
         status = "✅" if success else "❌"
         print(f"{status} {test_name}: {message}")
         
         if data and success:
-            # Mostrar algunos datos interesantes
+            # Show some interesting data
             if isinstance(data, dict):
-                for key, value in list(data.items())[:3]:  # Solo primeros 3
+                for key, value in list(data.items())[:3]:  # Only first 3
                     print(f"   📊 {key}: {value}")
     
     def test_server_health(self):
         """
-        Test 1: Verificar que el servidor está corriendo.
+        Test 1: Verify server is running.
         """
         try:
             response = self.session.get(f"{self.base_url}/health", timeout=5)
@@ -62,7 +62,7 @@ class MicrobiomeAPITester:
             if response.status_code == 200:
                 data = response.json()
                 self.log_test(
-                    "Servidor funcionando",
+                    "Server working",
                     True,
                     f"Status: {data.get('status', 'unknown')}",
                     data
@@ -70,7 +70,7 @@ class MicrobiomeAPITester:
                 return True
             else:
                 self.log_test(
-                    "Servidor funcionando",
+                    "Server working",
                     False,
                     f"HTTP {response.status_code}"
                 )
@@ -78,14 +78,14 @@ class MicrobiomeAPITester:
                 
         except requests.exceptions.ConnectionError:
             self.log_test(
-                "Servidor funcionando", 
+                "Server working", 
                 False,
-                "No se puede conectar al servidor. ¿Está corriendo?"
+                "Cannot connect to server. Is it running?"
             )
             return False
         except Exception as e:
             self.log_test(
-                "Servidor funcionando",
+                "Server working",
                 False, 
                 f"Error: {str(e)}"
             )
@@ -93,7 +93,7 @@ class MicrobiomeAPITester:
     
     def test_home_endpoint(self):
         """
-        Test 2: Probar endpoint principal.
+        Test 2: Test main endpoint.
         """
         try:
             response = self.session.get(f"{self.base_url}/")
@@ -101,15 +101,15 @@ class MicrobiomeAPITester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Verificar campos esperados
+                # Verify expected fields
                 expected_fields = ['message', 'version', 'endpoints', 'total_environments']
                 missing_fields = [field for field in expected_fields if field not in data]
                 
                 if not missing_fields:
                     self.log_test(
-                        "Endpoint principal (/)",
+                        "Main endpoint (/)",
                         True,
-                        f"Versión: {data.get('version', 'N/A')}",
+                        f"Version: {data.get('version', 'N/A')}",
                         {
                             'total_environments': data.get('total_environments', 0),
                             'endpoints_count': len(data.get('endpoints', []))
@@ -118,14 +118,14 @@ class MicrobiomeAPITester:
                     return data
                 else:
                     self.log_test(
-                        "Endpoint principal (/)",
+                        "Main endpoint (/)",
                         False,
-                        f"Campos faltantes: {missing_fields}"
+                        f"Missing fields: {missing_fields}"
                     )
                     return None
             else:
                 self.log_test(
-                    "Endpoint principal (/)",
+                    "Main endpoint (/)",
                     False,
                     f"HTTP {response.status_code}"
                 )
@@ -133,7 +133,7 @@ class MicrobiomeAPITester:
                 
         except Exception as e:
             self.log_test(
-                "Endpoint principal (/)",
+                "Main endpoint (/)",
                 False,
                 f"Error: {str(e)}"
             )
@@ -141,7 +141,7 @@ class MicrobiomeAPITester:
     
     def test_environments_endpoint(self):
         """
-        Test 3: Probar endpoint de ambientes.
+        Test 3: Test environments endpoint.
         """
         try:
             response = self.session.get(f"{self.base_url}/environments")
@@ -151,15 +151,15 @@ class MicrobiomeAPITester:
                 
                 environments = data.get('environments', [])
                 if environments:
-                    # Verificar estructura de un ambiente
+                    # Verify structure of an environment
                     first_env = environments[0]
                     required_fields = ['name', 'sample_count']
                     
                     if all(field in first_env for field in required_fields):
                         self.log_test(
-                            "Lista de ambientes (/environments)",
+                            "Environment list (/environments)",
                             True,
-                            f"Encontrados {len(environments)} ambientes",
+                            f"Found {len(environments)} environments",
                             {
                                 'total_environments': data.get('total_environments', 0),
                                 'total_samples': data.get('total_samples', 0),
@@ -169,21 +169,21 @@ class MicrobiomeAPITester:
                         return environments
                     else:
                         self.log_test(
-                            "Lista de ambientes (/environments)",
+                            "Environment list (/environments)",
                             False,
-                            "Estructura de ambiente inválida"
+                            "Invalid environment structure"
                         )
                         return None
                 else:
                     self.log_test(
-                        "Lista de ambientes (/environments)",
+                        "Environment list (/environments)",
                         False,
-                        "No se encontraron ambientes"
+                        "No environments found"
                     )
                     return None
             else:
                 self.log_test(
-                    "Lista de ambientes (/environments)",
+                    "Environment list (/environments)",
                     False,
                     f"HTTP {response.status_code}"
                 )
@@ -191,7 +191,7 @@ class MicrobiomeAPITester:
                 
         except Exception as e:
             self.log_test(
-                "Lista de ambientes (/environments)",
+                "Environment list (/environments)",
                 False,
                 f"Error: {str(e)}"
             )
@@ -199,21 +199,21 @@ class MicrobiomeAPITester:
     
     def test_composition_endpoint(self, environments):
         """
-        Test 4: Probar endpoint de composición.
+        Test 4: Test composition endpoint.
         """
         if not environments:
             self.log_test(
-                "Composición de ambiente",
+                "Environment composition",
                 False,
-                "No hay ambientes para probar"
+                "No environments to test"
             )
             return
         
-        # Probar con el ambiente más común
+        # Test with most common environment
         test_env = environments[0]['name']
         
         try:
-            # URL encode para espacios y caracteres especiales
+            # URL encode for spaces and special characters
             import urllib.parse
             encoded_env = urllib.parse.quote(test_env)
             
@@ -227,15 +227,15 @@ class MicrobiomeAPITester:
                     composition = data['composition']
                     
                     if composition:
-                        # Verificar estructura de composición
+                        # Verify composition structure
                         first_taxon = composition[0]
                         taxon_fields = ['taxon', 'abundance']
                         
                         if all(field in first_taxon for field in taxon_fields):
                             self.log_test(
-                                f"Composición de '{test_env}'",
+                                f"Composition of '{test_env}'",
                                 True,
-                                f"Encontrados {len(composition)} filos",
+                                f"Found {len(composition)} phyla",
                                 {
                                     'total_samples': data['total_samples'],
                                     'most_abundant': first_taxon['taxon'],
@@ -244,45 +244,45 @@ class MicrobiomeAPITester:
                             )
                         else:
                             self.log_test(
-                                f"Composición de '{test_env}'",
+                                f"Composition of '{test_env}'",
                                 False,
-                                "Estructura de taxón inválida"
+                                "Invalid taxon structure"
                             )
                     else:
                         self.log_test(
-                            f"Composición de '{test_env}'",
+                            f"Composition of '{test_env}'",
                             False,
-                            "No se encontró composición"
+                            "No composition found"
                         )
                 else:
                     self.log_test(
-                        f"Composición de '{test_env}'",
+                        f"Composition of '{test_env}'",
                         False,
-                        f"Campos faltantes: {[f for f in required_fields if f not in data]}"
+                        f"Missing fields: {[f for f in required_fields if f not in data]}"
                     )
             elif response.status_code == 404:
                 self.log_test(
-                    f"Composición de '{test_env}'",
+                    f"Composition of '{test_env}'",
                     False,
-                    "Ambiente no encontrado"
+                    "Environment not found"
                 )
             else:
                 self.log_test(
-                    f"Composición de '{test_env}'",
+                    f"Composition of '{test_env}'",
                     False,
                     f"HTTP {response.status_code}"
                 )
                 
         except Exception as e:
             self.log_test(
-                f"Composición de '{test_env}'",
+                f"Composition of '{test_env}'",
                 False,
                 f"Error: {str(e)}"
             )
     
     def test_stats_endpoint(self):
         """
-        Test 5: Probar endpoint de estadísticas.
+        Test 5: Test statistics endpoint.
         """
         try:
             response = self.session.get(f"{self.base_url}/stats")
@@ -295,9 +295,9 @@ class MicrobiomeAPITester:
                     dataset_info = data['dataset_info']
                     
                     self.log_test(
-                        "Estadísticas generales (/stats)",
+                        "General statistics (/stats)",
                         True,
-                        "Estadísticas completas obtenidas",
+                        "Complete statistics obtained",
                         {
                             'total_environments': dataset_info.get('total_environments', 0),
                             'total_samples': dataset_info.get('total_samples', 0),
@@ -307,108 +307,108 @@ class MicrobiomeAPITester:
                 else:
                     missing = [s for s in required_sections if s not in data]
                     self.log_test(
-                        "Estadísticas generales (/stats)",
+                        "General statistics (/stats)",
                         False,
-                        f"Secciones faltantes: {missing}"
+                        f"Missing sections: {missing}"
                     )
             else:
                 self.log_test(
-                    "Estadísticas generales (/stats)",
+                    "General statistics (/stats)",
                     False,
                     f"HTTP {response.status_code}"
                 )
                 
         except Exception as e:
             self.log_test(
-                "Estadísticas generales (/stats)",
+                "General statistics (/stats)",
                 False,
                 f"Error: {str(e)}"
             )
     
     def test_error_handling(self):
         """
-        Test 6: Probar manejo de errores.
+        Test 6: Test error handling.
         """
-        # Test ambiente inexistente
+        # Test non-existent environment
         try:
-            response = self.session.get(f"{self.base_url}/composition/ambiente_inexistente")
+            response = self.session.get(f"{self.base_url}/composition/nonexistent_environment")
             
             if response.status_code == 404:
                 self.log_test(
-                    "Manejo de errores (404)",
+                    "Error handling (404)",
                     True,
-                    "Error 404 manejado correctamente"
+                    "404 error handled correctly"
                 )
             else:
                 self.log_test(
-                    "Manejo de errores (404)",
+                    "Error handling (404)",
                     False,
-                    f"Esperaba 404, obtuvo {response.status_code}"
+                    f"Expected 404, got {response.status_code}"
                 )
         except Exception as e:
             self.log_test(
-                "Manejo de errores (404)",
+                "Error handling (404)",
                 False,
                 f"Error: {str(e)}"
             )
         
-        # Test endpoint inexistente
+        # Test non-existent endpoint
         try:
-            response = self.session.get(f"{self.base_url}/endpoint_inexistente")
+            response = self.session.get(f"{self.base_url}/nonexistent_endpoint")
             
             if response.status_code == 404:
                 self.log_test(
-                    "Manejo de errores (endpoint inexistente)",
+                    "Error handling (non-existent endpoint)",
                     True,
-                    "Endpoint inexistente manejado correctamente"
+                    "Non-existent endpoint handled correctly"
                 )
             else:
                 self.log_test(
-                    "Manejo de errores (endpoint inexistente)",
+                    "Error handling (non-existent endpoint)",
                     False,
-                    f"Esperaba 404, obtuvo {response.status_code}"
+                    f"Expected 404, got {response.status_code}"
                 )
         except Exception as e:
             self.log_test(
-                "Manejo de errores (endpoint inexistente)",
+                "Error handling (non-existent endpoint)",
                 False,
                 f"Error: {str(e)}"
             )
     
     def run_all_tests(self):
         """
-        Ejecutar todos los tests en secuencia.
+        Execute all tests in sequence.
         """
-        print("🧪 Iniciando tests de la API de Microbioma")
+        print("🧪 Starting Microbiome API tests")
         print("=" * 60)
         
         start_time = time.time()
         
-        # Test 1: Verificar servidor
+        # Test 1: Verify server
         if not self.test_server_health():
-            print("\n❌ Servidor no está disponible. Abortando tests.")
+            print("\n❌ Server not available. Aborting tests.")
             return False
         
-        # Esperar un poco para que los datos se carguen
-        print("\n⏳ Esperando que los datos se carguen...")
+        # Wait a bit for data to load
+        print("\n⏳ Waiting for data to load...")
         time.sleep(2)
         
-        # Test 2: Endpoint principal
+        # Test 2: Main endpoint
         home_data = self.test_home_endpoint()
         
-        # Test 3: Lista de ambientes
+        # Test 3: Environment list
         environments = self.test_environments_endpoint()
         
-        # Test 4: Composición específica
+        # Test 4: Specific composition
         self.test_composition_endpoint(environments)
         
-        # Test 5: Estadísticas
+        # Test 5: Statistics
         self.test_stats_endpoint()
         
-        # Test 6: Manejo de errores
+        # Test 6: Error handling
         self.test_error_handling()
         
-        # Resumen
+        # Summary
         end_time = time.time()
         duration = round(end_time - start_time, 2)
         
@@ -416,48 +416,48 @@ class MicrobiomeAPITester:
         total_tests = len(self.test_results)
         
         print("\n" + "=" * 60)
-        print("📋 RESUMEN DE TESTS")
-        print(f"✅ Tests exitosos: {successful_tests}/{total_tests}")
-        print(f"⏱️  Tiempo total: {duration} segundos")
+        print("📋 TEST SUMMARY")
+        print(f"✅ Successful tests: {successful_tests}/{total_tests}")
+        print(f"⏱️  Total time: {duration} seconds")
         
         if successful_tests == total_tests:
-            print("🎉 ¡Todos los tests pasaron! La API está funcionando correctamente.")
+            print("🎉 All tests passed! API is working correctly.")
             return True
         else:
-            print("⚠️  Algunos tests fallaron. Revisa los detalles arriba.")
+            print("⚠️  Some tests failed. Check details above.")
             return False
     
     def save_results(self, filename="test_results.json"):
         """
-        Guardar resultados en archivo JSON.
+        Save results to JSON file.
         """
         try:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(self.test_results, f, indent=2, ensure_ascii=False)
-            print(f"📄 Resultados guardados en: {filename}")
+            print(f"📄 Results saved to: {filename}")
         except Exception as e:
-            print(f"❌ Error guardando resultados: {e}")
+            print(f"❌ Error saving results: {e}")
 
 
 def main():
     """
-    Función principal para ejecutar los tests.
+    Main function to run tests.
     """
-    # Verificar argumentos
+    # Check arguments
     base_url = "http://localhost:5000"
     if len(sys.argv) > 1:
         base_url = sys.argv[1]
     
-    print(f"🔗 Testeando API en: {base_url}")
+    print(f"🔗 Testing API at: {base_url}")
     
-    # Crear tester y ejecutar
+    # Create tester and run
     tester = MicrobiomeAPITester(base_url)
     success = tester.run_all_tests()
     
-    # Guardar resultados
+    # Save results
     tester.save_results()
     
-    # Exit code para scripts
+    # Exit code for scripts
     sys.exit(0 if success else 1)
 
 

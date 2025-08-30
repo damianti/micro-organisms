@@ -1,15 +1,15 @@
 """
-🧬 Procesador de Datos de Microbioma
-=====================================
+🧬 Microbiome Data Processor
+============================
 
-Esta clase maneja toda la lógica para:
-1. Cargar datos desde archivos comprimidos
-2. Limpiar y filtrar datos
-3. Unir metadatos con composición microbiana  
-4. Calcular composiciones promedio por ambiente
+This class handles all the logic for:
+1. Loading data from compressed files
+2. Cleaning and filtering data
+3. Merging metadata with microbial composition  
+4. Calculating average compositions by environment
 
-Autor: Proyecto Microorganismos
-Fecha: 2025
+Author: Microorganisms Project
+Date: 2025
 """
 
 import pandas as pd
@@ -18,24 +18,24 @@ import os
 from typing import Dict, List, Tuple, Optional
 import warnings
 
-# Silenciar warnings de pandas para output más limpio
+# Silence pandas warnings for cleaner output
 warnings.filterwarnings('ignore')
 
 
 class MicrobiomeDataProcessor:
     """
-    Procesador principal para datos de microbioma.
+    Main processor for microbiome data.
     
-    Esta clase encapsula toda la lógica necesaria para procesar 
-    datos de composición microbiana y metadatos.
+    This class encapsulates all necessary logic to process 
+    microbial composition data and metadata.
     """
     
     def __init__(self, data_path: str):
         """
-        Inicializar el procesador.
+        Initialize the processor.
         
         Args:
-            data_path (str): Ruta al directorio con archivos de datos
+            data_path (str): Path to directory containing data files
         """
         self.data_path = data_path
         self.metadata = None
@@ -43,21 +43,21 @@ class MicrobiomeDataProcessor:
         self.merged_data = None
         self.composition_by_env = None
         
-        # Verificar que la ruta existe
+        # Verify path exists
         if not os.path.exists(data_path):
-            raise FileNotFoundError(f"❌ Directorio no encontrado: {data_path}")
+            raise FileNotFoundError(f"❌ Directory not found: {data_path}")
         
-        print(f"✅ Procesador inicializado para: {data_path}")
+        print(f"✅ Processor initialized for: {data_path}")
     
     def load_metadata(self) -> pd.DataFrame:
         """
-        Cargar metadatos de bioruns desde archivo comprimido.
+        Load biorun metadata from compressed file.
         
         Returns:
-            pd.DataFrame: Metadatos de bioruns
+            pd.DataFrame: Biorun metadata
         """
         try:
-            print("📂 Cargando metadatos de bioruns...")
+            print("📂 Loading biorun metadata...")
             metadata_file = os.path.join(
                 self.data_path, 
                 'sandpiper1.0.0.condensed.biorun-metadata.csv.gz'
@@ -65,24 +65,24 @@ class MicrobiomeDataProcessor:
             
             self.metadata = pd.read_csv(metadata_file)
             
-            print(f"✅ Metadatos cargados: {self.metadata.shape}")
-            print(f"📊 Memoria usada: {self.metadata.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+            print(f"✅ Metadata loaded: {self.metadata.shape}")
+            print(f"📊 Memory used: {self.metadata.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
             
             return self.metadata
             
         except Exception as e:
-            print(f"❌ Error cargando metadatos: {e}")
+            print(f"❌ Error loading metadata: {e}")
             raise
     
     def load_phylum_data(self) -> pd.DataFrame:
         """
-        Cargar datos de composición microbiana a nivel de filo.
+        Load microbial composition data at phylum level.
         
         Returns:
-            pd.DataFrame: Datos de composición por filo
+            pd.DataFrame: Phylum composition data
         """
         try:
-            print("🧬 Cargando datos de composición (filos)...")
+            print("🧬 Loading composition data (phyla)...")
             phylum_file = os.path.join(
                 self.data_path,
                 'sandpiper1.0.0.condensed.summary.phylum.csv.gz'
@@ -90,59 +90,59 @@ class MicrobiomeDataProcessor:
             
             self.phylum_data = pd.read_csv(phylum_file)
             
-            print(f"✅ Datos de filos cargados: {self.phylum_data.shape}")
-            print(f"🧬 Filos detectados: {self.phylum_data.shape[1] - 1}")  # -1 por columna 'biorun'
-            print(f"📊 Memoria usada: {self.phylum_data.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+            print(f"✅ Phylum data loaded: {self.phylum_data.shape}")
+            print(f"🧬 Phyla detected: {self.phylum_data.shape[1] - 1}")  # -1 for 'biorun' column
+            print(f"📊 Memory used: {self.phylum_data.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
             
             return self.phylum_data
             
         except Exception as e:
-            print(f"❌ Error cargando datos de filos: {e}")
+            print(f"❌ Error loading phylum data: {e}")
             raise
     
     def filter_metagenomes(self) -> pd.DataFrame:
         """
-        Filtrar solo bioruns que sean metagenomas (comunidades microbianas).
+        Filter only bioruns that are metagenomes (microbial communities).
         
         Returns:
-            pd.DataFrame: Metadatos filtrados solo para metagenomas
+            pd.DataFrame: Filtered metadata for metagenomes only
         """
         if self.metadata is None:
-            raise ValueError("❌ Primero carga los metadatos con load_metadata()")
+            raise ValueError("❌ Load metadata first with load_metadata()")
         
-        print("🔬 Filtrando metagenomas...")
+        print("🔬 Filtering metagenomes...")
         
-        # Filtrar filas que contengan 'metagenome' en organism_name
+        # Filter rows containing 'metagenome' in organism_name
         metagenome_mask = self.metadata['organism_name'].str.contains('metagenome', na=False)
         metagenomes = self.metadata[metagenome_mask].copy()
         
-        print(f"📊 Bioruns totales: {len(self.metadata):,}")
-        print(f"🦠 Bioruns de metagenomas: {len(metagenomes):,}")
-        print(f"📈 Porcentaje de metagenomas: {len(metagenomes)/len(self.metadata)*100:.1f}%")
+        print(f"📊 Total bioruns: {len(self.metadata):,}")
+        print(f"🦠 Metagenome bioruns: {len(metagenomes):,}")
+        print(f"📈 Metagenome percentage: {len(metagenomes)/len(self.metadata)*100:.1f}%")
         
         return metagenomes
     
     def merge_data(self) -> pd.DataFrame:
         """
-        Unir metadatos de metagenomas con datos de composición.
+        Merge metagenome metadata with composition data.
         
         Returns:
-            pd.DataFrame: Datos unidos con metadatos y composición
+            pd.DataFrame: Merged data with metadata and composition
         """
         if self.metadata is None:
-            raise ValueError("❌ Primero carga los metadatos con load_metadata()")
+            raise ValueError("❌ Load metadata first with load_metadata()")
         if self.phylum_data is None:
-            raise ValueError("❌ Primero carga los datos de filos con load_phylum_data()")
+            raise ValueError("❌ Load phylum data first with load_phylum_data()")
         
-        print("🔗 Uniendo metadatos con datos de composición...")
+        print("🔗 Merging metadata with composition data...")
         
-        # Filtrar metagenomas
+        # Filter metagenomes
         metagenomes = self.filter_metagenomes()
         
-        # Seleccionar columnas importantes de metadatos
+        # Select important metadata columns
         metadata_subset = metagenomes[['run_accession', 'organism_name', 'biosample']].copy()
         
-        # Hacer inner join
+        # Perform inner join
         self.merged_data = self.phylum_data.merge(
             metadata_subset,
             left_on='biorun',
@@ -150,107 +150,107 @@ class MicrobiomeDataProcessor:
             how='inner'
         )
         
-        print(f"✅ Datos unidos exitosamente: {self.merged_data.shape}")
-        print(f"📉 Datos perdidos en el join: {len(self.phylum_data) - len(self.merged_data):,}")
+        print(f"✅ Data merged successfully: {self.merged_data.shape}")
+        print(f"📉 Data lost in join: {len(self.phylum_data) - len(self.merged_data):,}")
         
         return self.merged_data
     
     def get_environment_stats(self, min_samples: int = 100) -> pd.Series:
         """
-        Obtener estadísticas de ambientes con suficientes muestras.
+        Get statistics for environments with sufficient samples.
         
         Args:
-            min_samples (int): Número mínimo de muestras por ambiente
+            min_samples (int): Minimum number of samples per environment
             
         Returns:
-            pd.Series: Conteo de muestras por ambiente (filtrado)
+            pd.Series: Sample count per environment (filtered)
         """
         if self.merged_data is None:
-            raise ValueError("❌ Primero une los datos con merge_data()")
+            raise ValueError("❌ Merge data first with merge_data()")
         
-        print(f"📊 Analizando ambientes con ≥{min_samples} muestras...")
+        print(f"📊 Analyzing environments with ≥{min_samples} samples...")
         
-        # Contar muestras por ambiente
+        # Count samples per environment
         env_counts = self.merged_data['organism_name'].value_counts()
         
-        # Filtrar ambientes significativos
+        # Filter significant environments
         significant_envs = env_counts[env_counts >= min_samples]
         
-        print(f"🌍 Ambientes totales: {len(env_counts)}")
-        print(f"✅ Ambientes significativos: {len(significant_envs)}")
-        print(f"📈 Muestras útiles: {significant_envs.sum():,} ({significant_envs.sum()/len(self.merged_data)*100:.1f}%)")
+        print(f"🌍 Total environments: {len(env_counts)}")
+        print(f"✅ Significant environments: {len(significant_envs)}")
+        print(f"📈 Useful samples: {significant_envs.sum():,} ({significant_envs.sum()/len(self.merged_data)*100:.1f}%)")
         
         return significant_envs
     
     def calculate_compositions(self, min_samples: int = 100) -> pd.DataFrame:
         """
-        Calcular composición promedio por ambiente.
+        Calculate average composition per environment.
         
         Args:
-            min_samples (int): Número mínimo de muestras por ambiente
+            min_samples (int): Minimum number of samples per environment
             
         Returns:
-            pd.DataFrame: Composiciones promedio por ambiente
+            pd.DataFrame: Average compositions per environment
         """
         if self.merged_data is None:
-            raise ValueError("❌ Primero une los datos con merge_data()")
+            raise ValueError("❌ Merge data first with merge_data()")
         
-        print("🧮 Calculando composiciones promedio por ambiente...")
+        print("🧮 Calculating average compositions per environment...")
         
-        # Obtener ambientes significativos
+        # Get significant environments
         significant_envs = self.get_environment_stats(min_samples)
         
-        # Filtrar datos solo para ambientes significativos
+        # Filter data for significant environments only
         filtered_data = self.merged_data[
             self.merged_data['organism_name'].isin(significant_envs.index)
         ].copy()
         
-        # Identificar columnas de filos
+        # Identify phylum columns
         phylum_columns = [col for col in self.merged_data.columns 
                          if col.startswith('d__') or col == 'unassigned']
         
-        print(f"🧬 Procesando {len(phylum_columns)} filos")
+        print(f"🧬 Processing {len(phylum_columns)} phyla")
         
-        # Calcular estadísticas por ambiente
+        # Calculate statistics per environment
         self.composition_by_env = filtered_data.groupby('organism_name')[phylum_columns].agg([
-            'mean',  # Promedio
-            'std',   # Desviación estándar  
-            'count'  # Número de muestras
+            'mean',  # Average
+            'std',   # Standard deviation  
+            'count'  # Number of samples
         ]).round(4)
         
-        print(f"✅ Composiciones calculadas para {len(self.composition_by_env)} ambientes")
+        print(f"✅ Compositions calculated for {len(self.composition_by_env)} environments")
         
         return self.composition_by_env
     
     def get_composition_for_environment(self, environment: str, min_abundance: float = 0.5) -> Dict:
         """
-        Obtener composición de un ambiente específico.
+        Get composition for a specific environment.
         
         Args:
-            environment (str): Nombre del ambiente
-            min_abundance (float): Abundancia mínima para incluir filo
+            environment (str): Environment name
+            min_abundance (float): Minimum abundance to include phylum
             
         Returns:
-            Dict: Composición del ambiente con metadatos
+            Dict: Environment composition with metadata
         """
         if self.composition_by_env is None:
-            raise ValueError("❌ Primero calcula las composiciones con calculate_compositions()")
+            raise ValueError("❌ Calculate compositions first with calculate_compositions()")
         
         if environment not in self.composition_by_env.index:
             available_envs = list(self.composition_by_env.index)
-            raise ValueError(f"❌ Ambiente '{environment}' no encontrado. Disponibles: {available_envs[:5]}...")
+            raise ValueError(f"❌ Environment '{environment}' not found. Available: {available_envs[:5]}...")
         
-        # Obtener composición promedio
+        # Get average composition
         mean_composition = self.composition_by_env.loc[environment].xs('mean', level=1)
         sample_count = int(self.composition_by_env.loc[environment].xs('count', level=1).iloc[0])
         
-        # Filtrar filos abundantes
+        # Filter abundant phyla
         abundant_phyla = mean_composition[mean_composition > min_abundance]
         
-        # Preparar respuesta
+        # Prepare response
         composition_list = []
         for taxon, abundance in abundant_phyla.sort_values(ascending=False).items():
-            # Limpiar nombre del taxón para mostrar
+            # Clean taxon name for display
             display_name = self._clean_taxon_name(taxon)
             
             composition_list.append({
@@ -267,13 +267,13 @@ class MicrobiomeDataProcessor:
     
     def get_available_environments(self) -> List[Dict]:
         """
-        Obtener lista de ambientes disponibles con metadatos.
+        Get list of available environments with metadata.
         
         Returns:
-            List[Dict]: Lista de ambientes con información
+            List[Dict]: List of environments with information
         """
         if self.composition_by_env is None:
-            raise ValueError("❌ Primero calcula las composiciones con calculate_compositions()")
+            raise ValueError("❌ Calculate compositions first with calculate_compositions()")
         
         environments = []
         for env in self.composition_by_env.index:
@@ -283,50 +283,50 @@ class MicrobiomeDataProcessor:
                 'sample_count': sample_count
             })
         
-        # Ordenar por número de muestras
+        # Sort by sample count
         environments.sort(key=lambda x: x['sample_count'], reverse=True)
         
         return environments
     
     def _clean_taxon_name(self, taxon: str) -> str:
         """
-        Limpiar nombre de taxón para mostrar al usuario.
+        Clean taxon name for user display.
         
         Args:
-            taxon (str): Nombre taxonómico completo
+            taxon (str): Full taxonomic name
             
         Returns:
-            str: Nombre limpio para mostrar
+            str: Clean name for display
         """
         if taxon == 'unassigned':
-            return 'No Asignado'
+            return 'Unassigned'
         
-        # Extraer dominio y filo: d__Bacteria;p__Pseudomonadota -> Bacteria - Pseudomonadota
+        # Extract domain and phylum: d__Bacteria;p__Pseudomonadota -> Bacteria - Pseudomonadota
         parts = taxon.split(';')
         if len(parts) >= 2:
             domain = parts[0].replace('d__', '')
             phylum = parts[1].replace('p__', '')
             return f"{domain} - {phylum}"
         else:
-            # Si solo hay dominio
+            # If only domain
             return taxon.replace('d__', '')
     
     def validate_data_integrity(self) -> Dict:
         """
-        Validar integridad de los datos cargados.
+        Validate integrity of loaded data.
         
         Returns:
-            Dict: Resultados de validación
+            Dict: Validation results
         """
         if self.phylum_data is None:
-            raise ValueError("❌ Primero carga los datos de filos")
+            raise ValueError("❌ Load phylum data first")
         
-        print("🔍 Validando integridad de datos...")
+        print("🔍 Validating data integrity...")
         
-        # Obtener columnas de abundancia
+        # Get abundance columns
         abundance_columns = [col for col in self.phylum_data.columns if col != 'biorun']
         
-        # Calcular sumas por fila
+        # Calculate row sums
         row_sums = self.phylum_data[abundance_columns].sum(axis=1)
         
         validation_results = {
@@ -338,66 +338,66 @@ class MicrobiomeDataProcessor:
             'total_samples': len(row_sums)
         }
         
-        print(f"📊 Suma promedio: {validation_results['mean_sum']}%")
-        print(f"📊 Desviación estándar: {validation_results['std_sum']}%")
-        print(f"✅ Muestras válidas (99-101%): {validation_results['samples_near_100']:,}")
+        print(f"📊 Average sum: {validation_results['mean_sum']}%")
+        print(f"📊 Standard deviation: {validation_results['std_sum']}%")
+        print(f"✅ Valid samples (99-101%): {validation_results['samples_near_100']:,}")
         
         return validation_results
     
     def process_all_data(self, min_samples: int = 100) -> bool:
         """
-        Ejecutar todo el pipeline de procesamiento.
+        Execute complete data processing pipeline.
         
         Args:
-            min_samples (int): Número mínimo de muestras por ambiente
+            min_samples (int): Minimum number of samples per environment
             
         Returns:
-            bool: True si el procesamiento fue exitoso
+            bool: True if processing was successful
         """
         try:
-            print("🚀 Iniciando procesamiento completo de datos...")
+            print("🚀 Starting complete data processing...")
             print("-" * 50)
             
-            # 1. Cargar datos
+            # 1. Load data
             self.load_metadata()
             self.load_phylum_data()
             
-            # 2. Validar integridad
+            # 2. Validate integrity
             self.validate_data_integrity()
             
-            # 3. Procesar
+            # 3. Process
             self.merge_data()
             self.calculate_compositions(min_samples)
             
             print("-" * 50)
-            print("✅ Procesamiento completado exitosamente!")
+            print("✅ Processing completed successfully!")
             
-            # Estadísticas finales
+            # Final statistics
             envs = self.get_available_environments()
-            print(f"🌍 Ambientes procesados: {len(envs)}")
-            print(f"📊 Total de muestras útiles: {sum(env['sample_count'] for env in envs):,}")
+            print(f"🌍 Environments processed: {len(envs)}")
+            print(f"📊 Total useful samples: {sum(env['sample_count'] for env in envs):,}")
             
             return True
             
         except Exception as e:
-            print(f"❌ Error en procesamiento: {e}")
+            print(f"❌ Processing error: {e}")
             return False
 
 
-# Funciones de utilidad independientes
+# Independent utility functions
 def quick_analysis(data_path: str) -> Dict:
     """
-    Análisis rápido de los datos sin procesamiento completo.
+    Quick analysis of data without complete processing.
     
     Args:
-        data_path (str): Ruta a los datos
+        data_path (str): Path to data
         
     Returns:
-        Dict: Resumen estadístico
+        Dict: Statistical summary
     """
     processor = MicrobiomeDataProcessor(data_path)
     
-    # Solo cargar metadatos para análisis rápido
+    # Only load metadata for quick analysis
     metadata = processor.load_metadata()
     metagenomes = processor.filter_metagenomes()
     
@@ -412,10 +412,10 @@ def quick_analysis(data_path: str) -> Dict:
 
 
 if __name__ == "__main__":
-    # Test básico si se ejecuta directamente
-    print("🧪 Test del procesador de datos...")
+    # Basic test if run directly
+    print("🧪 Testing data processor...")
     
-    # Cambiar esta ruta según tu configuración
+    # Change this path according to your configuration
     data_path = "../Microbe-vis-data"
     
     if os.path.exists(data_path):
@@ -423,9 +423,9 @@ if __name__ == "__main__":
         success = processor.process_all_data(min_samples=50)
         
         if success:
-            print("\n🎉 Test completado exitosamente!")
+            print("\n🎉 Test completed successfully!")
         else:
-            print("\n❌ Test falló")
+            print("\n❌ Test failed")
     else:
-        print(f"❌ Directorio de datos no encontrado: {data_path}")
-        print("💡 Ajusta la variable data_path en el código")
+        print(f"❌ Data directory not found: {data_path}")
+        print("💡 Adjust the data_path variable in the code")

@@ -1,17 +1,17 @@
 """
-🌐 API de Microbioma - Parte 1
-==============================
+🌐 Microbiome API - Part 1
+==========================
 
-API REST simple que sirve datos de composición microbiana.
+Simple REST API serving microbial composition data.
 
-Endpoints disponibles:
-- GET / - Información de la API
-- GET /environments - Lista de ambientes disponibles
-- GET /composition/<environment> - Composición de un ambiente
-- GET /stats - Estadísticas generales
+Available endpoints:
+- GET / - API information
+- GET /environments - List of available environments
+- GET /composition/<environment> - Composition of an environment
+- GET /stats - General statistics
 
-Autor: Proyecto Microorganismos  
-Fecha: 2025
+Author: Microorganisms Project  
+Date: 2025
 """
 
 from flask import Flask, jsonify, request
@@ -21,16 +21,16 @@ import sys
 from datetime import datetime
 import traceback
 
-# Importar nuestro procesador
+# Import our processor
 from data_processor import MicrobiomeDataProcessor
 
-# Crear aplicación Flask
+# Create Flask application
 app = Flask(__name__)
 
-# Configurar CORS para permitir requests desde el frontend
+# Configure CORS to allow requests from frontend
 CORS(app, origins=["http://localhost:3000", "http://localhost:8080"])
 
-# Variables globales para datos procesados
+# Global variables for processed data
 processor = None
 environments_data = {}
 processing_status = {
@@ -43,7 +43,7 @@ processing_status = {
 
 def initialize_data():
     """
-    Inicializar y procesar todos los datos al arrancar el servidor.
+    Initialize and process all data when starting the server.
     """
     global processor, environments_data, processing_status
     
@@ -51,27 +51,27 @@ def initialize_data():
         processing_status['loading'] = True
         processing_status['error'] = None
         
-        print("🚀 Inicializando datos del microbioma...")
+        print("🚀 Initializing microbiome data...")
         print("-" * 50)
         
-        # Ruta a los datos (ajustar según tu configuración)
+        # Path to data (adjust according to your configuration)
         data_path = "../Microbe-vis-data"
         
         if not os.path.exists(data_path):
-            raise FileNotFoundError(f"Directorio de datos no encontrado: {data_path}")
+            raise FileNotFoundError(f"Data directory not found: {data_path}")
         
-        # Crear procesador y cargar datos
+        # Create processor and load data
         processor = MicrobiomeDataProcessor(data_path)
         success = processor.process_all_data(min_samples=100)
         
         if not success:
-            raise Exception("Error durante el procesamiento de datos")
+            raise Exception("Error during data processing")
         
-        # Convertir a formato JSON-friendly
+        # Convert to JSON-friendly format
         environments_data = {}
         available_envs = processor.get_available_environments()
         
-        print(f"📊 Preparando {len(available_envs)} ambientes para la API...")
+        print(f"📊 Preparing {len(available_envs)} environments for API...")
         
         for env_info in available_envs:
             env_name = env_info['name']
@@ -79,7 +79,7 @@ def initialize_data():
                 composition = processor.get_composition_for_environment(env_name, min_abundance=0.5)
                 environments_data[env_name] = composition
             except Exception as e:
-                print(f"⚠️  Error procesando {env_name}: {e}")
+                print(f"⚠️  Error processing {env_name}: {e}")
                 continue
         
         processing_status['loaded'] = True
@@ -87,53 +87,53 @@ def initialize_data():
         processing_status['last_update'] = datetime.now().isoformat()
         
         print("-" * 50)
-        print(f"✅ API inicializada con {len(environments_data)} ambientes")
-        print("🌐 Servidor listo para recibir requests")
+        print(f"✅ API initialized with {len(environments_data)} environments")
+        print("🌐 Server ready to receive requests")
         
         return True
         
     except Exception as e:
         processing_status['loading'] = False
         processing_status['error'] = str(e)
-        print(f"❌ Error inicializando datos: {e}")
+        print(f"❌ Error initializing data: {e}")
         traceback.print_exc()
         return False
 
 
 # ========================================
-# ENDPOINTS DE LA API
+# API ENDPOINTS
 # ========================================
 
 @app.route('/')
 def home():
     """
-    Endpoint principal con información de la API.
+    Main endpoint with API information.
     """
     return jsonify({
-        "message": "🧬 API de Microbioma - Parte 1",
+        "message": "🧬 Microbiome API - Part 1",
         "version": "1.0.0",
-        "description": "API para analizar composición microbiana por ambiente",
+        "description": "API for analyzing microbial composition by environment",
         "status": processing_status,
         "endpoints": [
             {
                 "method": "GET",
                 "path": "/",
-                "description": "Información de la API"
+                "description": "API information"
             },
             {
                 "method": "GET", 
                 "path": "/environments",
-                "description": "Lista de ambientes disponibles"
+                "description": "List of available environments"
             },
             {
                 "method": "GET",
                 "path": "/composition/<environment>",
-                "description": "Composición microbiana de un ambiente específico"
+                "description": "Microbial composition of a specific environment"
             },
             {
                 "method": "GET",
                 "path": "/stats", 
-                "description": "Estadísticas generales del dataset"
+                "description": "General dataset statistics"
             }
         ],
         "total_environments": len(environments_data) if processing_status['loaded'] else 0
@@ -143,16 +143,16 @@ def home():
 @app.route('/environments')
 def get_environments():
     """
-    Obtener lista de todos los ambientes disponibles.
+    Get list of all available environments.
     """
     if not processing_status['loaded']:
         return jsonify({
-            'error': 'Datos no cargados',
+            'error': 'Data not loaded',
             'status': processing_status
         }), 503
     
     try:
-        # Crear lista de ambientes con información
+        # Create list of environments with information
         env_list = []
         for env_name, data in environments_data.items():
             env_list.append({
@@ -161,7 +161,7 @@ def get_environments():
                 'phyla_count': len(data['composition'])
             })
         
-        # Ordenar por número de muestras (descendente)
+        # Sort by sample count (descending)
         env_list.sort(key=lambda x: x['sample_count'], reverse=True)
         
         return jsonify({
@@ -172,38 +172,38 @@ def get_environments():
         
     except Exception as e:
         return jsonify({
-            'error': f'Error obteniendo ambientes: {str(e)}'
+            'error': f'Error getting environments: {str(e)}'
         }), 500
 
 
 @app.route('/composition/<environment>')
 def get_composition(environment):
     """
-    Obtener composición microbiana de un ambiente específico.
+    Get microbial composition of a specific environment.
     
     Args:
-        environment (str): Nombre del ambiente
+        environment (str): Environment name
     """
     if not processing_status['loaded']:
         return jsonify({
-            'error': 'Datos no cargados',
+            'error': 'Data not loaded',
             'status': processing_status
         }), 503
     
-    # Verificar que el ambiente existe
+    # Verify environment exists
     if environment not in environments_data:
-        available_envs = list(environments_data.keys())[:10]  # Mostrar solo 10
+        available_envs = list(environments_data.keys())[:10]  # Show only 10
         return jsonify({
-            'error': f'Ambiente "{environment}" no encontrado',
+            'error': f'Environment "{environment}" not found',
             'available_environments': available_envs,
             'total_available': len(environments_data)
         }), 404
     
     try:
-        # Obtener datos del ambiente
+        # Get environment data
         composition_data = environments_data[environment].copy()
         
-        # Agregar metadatos adicionales
+        # Add additional metadata
         composition_data['request_timestamp'] = datetime.now().isoformat()
         composition_data['data_source'] = 'GTDB taxonomy'
         
@@ -211,27 +211,27 @@ def get_composition(environment):
         
     except Exception as e:
         return jsonify({
-            'error': f'Error obteniendo composición: {str(e)}'
+            'error': f'Error getting composition: {str(e)}'
         }), 500
 
 
 @app.route('/stats')
 def get_stats():
     """
-    Obtener estadísticas generales del dataset.
+    Get general dataset statistics.
     """
     if not processing_status['loaded']:
         return jsonify({
-            'error': 'Datos no cargados',
+            'error': 'Data not loaded',
             'status': processing_status
         }), 503
     
     try:
-        # Calcular estadísticas
+        # Calculate statistics
         total_environments = len(environments_data)
         total_samples = sum(data['total_samples'] for data in environments_data.values())
         
-        # Top 5 ambientes por número de muestras
+        # Top 5 environments by sample count
         top_environments = []
         env_items = list(environments_data.items())
         env_items.sort(key=lambda x: x[1]['total_samples'], reverse=True)
@@ -243,7 +243,7 @@ def get_stats():
                 'phyla_detected': len(data['composition'])
             })
         
-        # Estadísticas de filos
+        # Phyla statistics
         all_phyla = set()
         for data in environments_data.values():
             for taxon_info in data['composition']:
@@ -267,18 +267,18 @@ def get_stats():
         
     except Exception as e:
         return jsonify({
-            'error': f'Error calculando estadísticas: {str(e)}'
+            'error': f'Error calculating statistics: {str(e)}'
         }), 500
 
 
 # ========================================
-# ENDPOINTS DE UTILIDAD
+# UTILITY ENDPOINTS
 # ========================================
 
 @app.route('/health')
 def health_check():
     """
-    Endpoint para verificar que la API está funcionando.
+    Endpoint to verify API is working.
     """
     return jsonify({
         'status': 'healthy',
@@ -290,11 +290,11 @@ def health_check():
 @app.route('/reload')
 def reload_data():
     """
-    Recargar datos (útil para desarrollo).
+    Reload data (useful for development).
     """
     if processing_status['loading']:
         return jsonify({
-            'message': 'Ya se están cargando los datos...',
+            'message': 'Data is already being loaded...',
             'status': processing_status
         }), 409
     
@@ -302,64 +302,64 @@ def reload_data():
     
     if success:
         return jsonify({
-            'message': 'Datos recargados exitosamente',
+            'message': 'Data reloaded successfully',
             'environments_loaded': len(environments_data),
             'status': processing_status
         })
     else:
         return jsonify({
-            'error': 'Error recargando datos',
+            'error': 'Error reloading data',
             'status': processing_status
         }), 500
 
 
 # ========================================
-# MANEJO DE ERRORES
+# ERROR HANDLING
 # ========================================
 
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({
-        'error': 'Endpoint no encontrado',
-        'message': 'Verifica la URL y método HTTP'
+        'error': 'Endpoint not found',
+        'message': 'Check URL and HTTP method'
     }), 404
 
 
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({
-        'error': 'Error interno del servidor',
-        'message': 'Contacta al administrador si el problema persiste'
+        'error': 'Internal server error',
+        'message': 'Contact administrator if problem persists'
     }), 500
 
 
 # ========================================
-# EJECUTAR SERVIDOR
+# RUN SERVER
 # ========================================
 
 if __name__ == '__main__':
-    print("🧬 Iniciando API de Microbioma...")
+    print("🧬 Starting Microbiome API...")
     print("=" * 60)
     
-    # Inicializar datos al arrancar
+    # Initialize data when starting
     if not initialize_data():
-        print("❌ No se pudieron cargar los datos. Servidor iniciado en modo limitado.")
+        print("❌ Could not load data. Server started in limited mode.")
     
     print("=" * 60)
-    print("🌐 Servidor disponible en:")
+    print("🌐 Server available at:")
     print("   • http://localhost:5000")
     print("   • http://127.0.0.1:5000")
-    print("\n📋 Endpoints principales:")
+    print("\n📋 Main endpoints:")
     print("   • GET /environments")
     print("   • GET /composition/<environment>")
     print("   • GET /stats")
-    print("\n🛑 Para detener: Ctrl+C")
+    print("\n🛑 To stop: Ctrl+C")
     print("=" * 60)
     
-    # Ejecutar servidor
+    # Run server
     app.run(
-        debug=True,           # Modo debug para desarrollo
-        host='0.0.0.0',      # Permitir conexiones externas
-        port=5000,           # Puerto estándar
-        threaded=True        # Permitir múltiples requests simultáneos
+        debug=True,           # Debug mode for development
+        host='0.0.0.0',      # Allow external connections
+        port=5000,           # Standard port
+        threaded=True        # Allow multiple simultaneous requests
     )
